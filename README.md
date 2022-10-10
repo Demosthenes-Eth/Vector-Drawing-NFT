@@ -1,6 +1,6 @@
 # Web-Drawing-Interface-Test
 
-Simple drawing interface using Javascript and the canvas to experiment with and test the following:
+This is a simple drawing interface using the canvas and inline Javascript within an HTML document to experiment with and test the following:
 
 1. OpenAi's GPT-3 Codex model capabilities around frontend/UI creation
 2. Practice and reinforce recent Javascript studies
