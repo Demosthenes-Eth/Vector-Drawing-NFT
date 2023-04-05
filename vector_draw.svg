@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 27.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Master" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 600 600" style="enable-background:new 0 0 600 600;" xml:space="preserve" width="600"  height="600">
+     <rect x="0" y="2" width="100%" height="99.5%" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;"/>
+     
+     <g id="color-selection" pointer-events="none">
+          <rect x="525" y="50" width="50" height="25" style="fill:hsl(360,100%,100%);stroke:#000000;stroke-width:2;stroke-miterlimit:10;"/>
+     
+     </g>
+
+     <g id="canvas-frame" pointer-events="none">
+          <g id="canvas" pointer-events="all">
+               <rect id="canvas-background" x="100" y="50" width="400" height="400" style="fill:#FFFFFF;"/>
+          </g>
+          <rect x="100" y="50" width="400" height="400" style="fill:#FFFFFF;fill-opacity:0; stroke:#000000;stroke-width:2;stroke-miterlimit:10;"/>
+     </g>
+     <script>
+          <![CDATA[
+               var isMouseDown = false;
+               var hue;
+               var saturation;
+               var lightness;
+               var color = "hsl(360,100%,0%)";
+               
+               (function() {
+                    var canvas = document.getElementById("canvas");
+                    var rectWidth = 8;
+                    var rectHeight = 8;
+                    var gridWidth = 50;
+                    var gridHeight = 50;
+                    var offsetX = 100;
+                    var offsetY = 50;
+
+                    for (let i = 0; i < gridWidth; i++) {
+                         for (let j = 0; j < gridHeight; j++) {
+                              let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                              rect.setAttribute("id", "r" + j + "c" + i);
+                              rect.setAttribute("class", "pixel");
+                              rect.setAttribute("x", offsetX + i * rectWidth);
+                              rect.setAttribute("y", offsetY + j * rectHeight);
+                              rect.setAttribute("width", rectWidth);
+                              rect.setAttribute("height", rectHeight);
+                              rect.setAttribute("style", "fill:hsl(360,100%,100%);");
+                              canvas.appendChild(rect);
+                         }
+                    }
+
+                    var canvasGroup = document.getElementById("canvas");
+                    canvasGroup.addEventListener(
+                        "mouseover", 
+                        (event) => {if (isMouseDown) {
+                            console.log("mouseover");
+                            changeColor(event);
+                            }});
+
+                    canvasGroup.addEventListener(
+                         "mousedown",
+                         (event) => {
+                              console.log("canvas mousedown");
+                              changeColor(event);
+                         });
+
+               })();
+
+               document.addEventListener("mousedown", (event) => {
+                     isMouseDown = true;
+                     console.log("mousedown");
+               });
+
+               document.addEventListener("mouseup", (event) => {
+                    isMouseDown = false;
+                    console.log("mouseup");
+               });
+
+               function changeColor(event){
+                    console.log("changeColor triggered");
+                    var id = event.target.id;
+                    console.log(id);
+                    event.target.setAttribute("style", `fill:${color};`);
+                    console.log(color);
+               };
+          ]]>
+     </script>
+</svg>

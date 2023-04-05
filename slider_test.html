@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertical SVG Slider</title>
+</head>
+<body>
+    <svg id="svg" width="80" height="300" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#f8f8f8"/>
+        <line x1="40" y1="25" x2="40" y2="275" stroke="#000" stroke-width="5"/>
+        <circle id="slider" cx="40" cy="275" r="15" fill="#00f" stroke="#000" stroke-width="2"/>
+        <text id="sliderValue" x="40" y="20" font-size="20" text-anchor="middle">100</text>
+        <script type="application/ecmascript"><![CDATA[
+            const svg = document.getElementById('svg');
+            const slider = document.getElementById('slider');
+            const sliderValue = document.getElementById('sliderValue');
+            let isMouseDown = false;
+            let yOffset = 0;
+
+            function updateValue(evt) {
+                const position = Math.round((275 - (evt.clientY + yOffset)) / 250 * 100);
+                const value = Math.min(Math.max(position, 0), 100);
+                const y = 275 - 250 * value / 100;
+                slider.setAttribute('cy', y);
+                sliderValue.textContent = value;
+            }
+
+            function mouseup(evt) {
+                isMouseDown = false;
+                svg.removeEventListener('mousemove', mousemove);
+                svg.removeEventListener('touchmove', touchmove);
+            }
+
+            function mousedown(evt) {
+                evt.preventDefault();
+                isMouseDown = true;
+                yOffset = evt.clientY - slider.getAttribute('cy');
+                svg.addEventListener('mousemove', mousemove);
+                svg.addEventListener('touchmove', touchmove);
+            }
+
+            function mousemove(evt) {
+                if (isMouseDown) {
+                    updateValue(evt);
+                }
+            }
+
+            function touchmove(evt) {
+                if (isMouseDown) {
+                    const touch = evt.touches[0];
+                    updateValue(touch);
+                }
+            }
+
+            slider.addEventListener('mousedown', mousedown);
+            slider.addEventListener('touchstart', mousedown);
+            slider.addEventListener('mouseup', mouseup);
+            slider.addEventListener('touchend', mouseup);
+        ]]></script>
+    </svg>
+</body>
+</html>
