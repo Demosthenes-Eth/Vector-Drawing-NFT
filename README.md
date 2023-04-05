@@ -13,3 +13,6 @@ After testing the initial mechanics of the code, I started to add small bug fixe
 As this is just a capabilities test, the whole thing is still very understandably rough, unoptimized, and unrefined.  I plan to continue noodling on the interface as my schedule allows to evolve it, piecemeal, into a more sophisticated and polished product.  Will most likely refactor the javascript to utilize SVG XML to produce the user's GFX output as vectors rather than the rasterized Canvas.
 
 The script includes a function to "save" the image as a base64 data URL.  In the future, this output can be passed as a function argument for an NFT contract's mint function.
+
+
+EDIT:  Having experimented with enabling drawing capabilities via the Canvas, I have begun the process of experimenting with creating similar functionality strictly using SVG XML and in-line javascript in order to facilitate vector-based drawing rather than raster illustration.
