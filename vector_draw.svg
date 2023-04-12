@@ -42,11 +42,22 @@
                <rect x="20" y="80" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
                <text x="30" y="95" font-size="12" text-anchor="middle" cursor="pointer">R</text>         
           </g>
+          <g id="undo" pointer-events="all" onclick="undo()">
+               <rect x="50" y="80" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
+               <text x="60" y="95" font-size="12" text-anchor="middle" cursor="pointer">UD</text>         
+          </g>
+          <g id="redo" pointer-events="all" onclick="redo()">
+               <rect x="20" y="110" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
+               <text x="30" y="125" font-size="12" text-anchor="middle" cursor="pointer">RD</text>         
+          </g>
      </g>
 
      <g id="file-management" pointer-events="all">
-          <rect x="100" y="500" width="400" height="40" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;" onclick="downloadSVG()"/>
-          <text x="300" y="525" font-size="16" text-anchor="middle" cursor="pointer" onclick="downloadSVG()">Download</text>
+          <rect x="100" y="460" width="400" height="40" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;" onclick="downloadSVG()"/>
+          <text x="300" y="485" font-size="16" text-anchor="middle" cursor="pointer" onclick="downloadSVG()">Download</text>
+
+          <rect x="100" y="510" width="400" height="40" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;" onclick="commitToChain()"/>
+          <text x="300" y="535" font-size="16" text-anchor="middle" cursor="pointer" onclick="commitToChain()">Lock Art</text>
      </g>
      
      <g id="color-selection" pointer-events="all">
@@ -84,6 +95,8 @@
                const satSliderValue = document.getElementById('saturation-slider-value');
                const lightnessSliderValue = document.getElementById('lightness-slider-value');
                const eyeDropper = document.getElementById('eye-dropper');
+               const undoButton = document.getElementById('undo');
+               const redoButton = document.getElementById('redo');
                var hueSliderValueText = hueSliderValue.textContent;
                var satSliderValueText = satSliderValue.textContent;
                var lightnessSliderValueText = lightnessSliderValue.textContent;
@@ -354,6 +367,10 @@
                     let slider = evt.target;
                     slider.setAttribute("cursor", "grab;");
                };
+
+               function commitToChain(){
+                    console.log("commitToChain triggered");
+               }
                ]]>
           </script>
      </svg>
