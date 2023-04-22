@@ -42,13 +42,25 @@
                <rect x="20" y="80" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
                <text x="30" y="95" font-size="12" text-anchor="middle" cursor="pointer">R</text>         
           </g>
-          <g id="undo" pointer-events="all" onclick="undo()">
+          <g id="brush" pointer-events="all" onclick="toggleBrush()">
                <rect x="50" y="80" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
-               <text x="60" y="95" font-size="12" text-anchor="middle" cursor="pointer">UD</text>         
+               <text x="60" y="95" font-size="12" text-anchor="middle" cursor="pointer">B</text>         
+          </g>
+          <g id="rainbow" pointer-events="all" onclick="toggleRainbowBrush()">
+               <rect x="20" y="110" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
+               <text x="30" y="125" font-size="12" text-anchor="middle" cursor="pointer">RB</text>         
+          </g>
+          <g id="fill-bucket" pointer-events="all" onclick="toggleFillBucket()">
+               <rect x="50" y="110" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
+               <text x="60" y="125" font-size="12" text-anchor="middle" cursor="pointer">PB</text>         
+          </g>
+          <g id="undo" pointer-events="all" onclick="undo()">
+               <rect x="20" y="140" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
+               <text x="30" y="155" font-size="12" text-anchor="middle" cursor="pointer">UD</text>         
           </g>
           <g id="redo" pointer-events="all" onclick="redo()">
-               <rect x="20" y="110" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
-               <text x="30" y="125" font-size="12" text-anchor="middle" cursor="pointer">RD</text>         
+               <rect x="50" y="140" width="20" height="20" style="fill:#FFFFFF;stroke:#000000;stroke-width:2;stroke-miterlimit:10;cursor:pointer;"/>
+               <text x="60" y="155" font-size="12" text-anchor="middle" cursor="pointer">RD</text>         
           </g>
      </g>
 
@@ -100,12 +112,21 @@
                var hueSliderValueText = hueSliderValue.textContent;
                var satSliderValueText = satSliderValue.textContent;
                var lightnessSliderValueText = lightnessSliderValue.textContent;
+               var undoStack = [];
+               var undoPixels = [];
+               var redoStack = [];
+               var redoPixels = [];
+               var immediateNeighbors = [];
+               var fillGroup = [];
                var isMouseDown = false;
                var hueSliderSelected = false;
                var satSliderSelected = false;
                var lightnessSliderSelected = false;
                var isEyeDropperSelected = false;
+               var isRainbowBrushSelected = false;
+               var isFillBucketSelected = false;
                var yOffset = 0;
+               var hueCounter = 0;
                var hue = hueSliderValueText;
                var saturation = satSliderValueText;
                var lightness = lightnessSliderValueText;
@@ -134,10 +155,11 @@
                          }
                     }
 
+                    
                     var canvasGroup = document.getElementById("canvas");
                     canvasGroup.addEventListener(
                         "mouseover", 
-                        (event) => {if (isMouseDown) {
+                        (event) => {if (isMouseDown && isFillBucketSelected == false && isEyeDropperSelected == false) {
                             console.log("mouseover");
                             changeColor(event);
                             }});
@@ -145,9 +167,12 @@
                     canvasGroup.addEventListener(
                          "mousedown",
                          (event) => {
-                              console.log("canvas mousedown");
-                              changeColor(event);
-                         });
+                              if (isFillBucketSelected == false && isEyeDropperSelected == false){
+                                   console.log("mousedown");
+                                   changeColor(event);
+                              }
+                         }
+                    );
 
                })();
 
@@ -155,6 +180,18 @@
                updateSatValue({clientY: 400});
                updateLightnessValue({clientY: 400});
 
+               var canvasOnly = document.getElementById("canvas");
+               canvasOnly.addEventListener('click', (evt) => {
+                    if (isFillBucketSelected){
+                         let paintbucketTarget = evt.target.id;
+                         let targetRow = paintbucketTarget.substring(1, paintbucketTarget.indexOf("c"));
+                         let targetColumn = paintbucketTarget.substring(paintbucketTarget.indexOf("c") + 1);
+                         paintbucket(targetRow, targetColumn, color);
+                    } else if (isEyeDropperSelected){
+                         sampleHSLColorValue(evt);
+                    }
+               });
+               
                document.addEventListener("mousedown", (event) => {
                      isMouseDown = true;
                      console.log("mousedown");
@@ -195,11 +232,15 @@
                     if(sliderValue){
                          sliderValue.textContent = value;
                     }
+                    
                     hue = value;
                     color = `hsl(${hue},${saturation}%,${lightness}%)`;
                     slider.setAttribute("fill", `hsl(${hue},100%,50%)`);
                     document.getElementById("saturation-slider").setAttribute("fill", `hsl(${hue},${saturation}%,50%)`);
                     colorPreview.setAttribute("style", `fill:${color};stroke:hsl(360,0%,0%);stroke-width:2;`);
+                    if(isRainbowBrushSelected && hueCounter != evt.clientY){
+                         hueCounter = evt.clientY;
+                    }
                };
                
                function updateSatValue(evt) {
@@ -299,22 +340,61 @@
                     console.log("changeColor triggered");
                     var id = event.target.id;
                     console.log(id);
+                    var originalColor = event.target.getAttribute("style");
+                    console.log("Original Color: " + originalColor);
                     event.target.setAttribute("style", `fill:${color};`);
-                    console.log(color);
+                    console.log("New Color: " + color);
+
+                    if(undoStack.length < 20) {
+                         undoStack.push({id: id, color: originalColor});
+                    } else {
+                         undoStack.shift();
+                         undoStack.push({id: id, color: originalColor});
+                    }
+
+                    if(isRainbowBrushSelected && hueCounter < 400){
+                         hueCounter++;
+                         updateHueValue({clientY: hueCounter});
+                    } else if(isRainbowBrushSelected && hueCounter == 400){
+                         hueCounter = 130;
+                         updateHueValue({clientY: hueCounter});
+                    }
                };
 
                function activateEyedropper(evt){
                     console.log("Eye dropper activated");
                     isEyeDropperSelected = true;
                     svg.setAttribute("cursor", "crosshair");
-                    sampleHSLColorValue();
+                    
                };
 
-               function activateEraser(evt){
+               function activateEraser(evt) {
                     console.log("Eraser activated");
-                    updateHueValue({clientY: 131});
-                    updateSatValue({clientY: 131});
-                    updateLightnessValue({clientY: 131});
+                    hue = 360;
+                    saturation = 100;
+                    lightness = 100;
+                    color = `hsl(${hue},${saturation}%,${lightness}%)`;
+
+                    let hueSlider = document.getElementById('hue-slider');
+                    let hueSliderValue = document.getElementById(hueSlider.id + '-value');
+                    let satSlider = document.getElementById('saturation-slider');
+                    let satSliderValue = document.getElementById(satSlider.id + '-value');
+                    let lightSlider = document.getElementById('lightness-slider');
+                    let lightSliderValue = document.getElementById(lightSlider.id + '-value');
+                    let colorPreview = document.getElementById('color-preview');
+
+                    hueSlider.setAttribute('cy', 130);
+                    hueSliderValue.textContent = 360;
+                    satSlider.setAttribute('cy', 130);
+                    satSliderValue.textContent = 100;
+                    lightSlider.setAttribute('cy', 130);
+                    lightSliderValue.textContent = 100;
+
+                    hueSlider.setAttribute("fill", `hsl(${hue},100%,50%)`);
+                    satSlider.setAttribute("fill", `hsl(${hue},${saturation}%,50%)`);
+                    lightSlider.setAttribute("fill", `hsl(${hue},0%,${lightness}%)`);
+
+                    colorPreview.setAttribute("style", `fill:${color};stroke:hsl(360,0%,0%);stroke-width:2;`);
                };
 
                function resetCanvas(){
@@ -328,7 +408,28 @@
                               pixel.setAttribute("style", `fill:hsl(360,0%,100%);`);
                          }
                     }
+                    undoStack = [];
+                    redoStack = [];
                };
+
+               function toggleBrush(){
+                    console.log("toggleBrush triggered");
+                    isEyeDropperSelected = false;
+                    isRainbowBrushSelected = false;
+                    isFillBucketSelected = false;
+                    svg.setAttribute("cursor", "default");
+               }
+
+               function toggleRainbowBrush(){
+                    console.log("toggleRainbowBrush triggered");
+                    isEyeDropperSelected = false;
+                    isRainbowBrushSelected = true;
+                    isFillBucketSelected = false;
+                    svg.setAttribute("cursor", "default");
+
+                    hueCounter = document.getElementById("hue-slider").getAttribute("cy");
+
+               }
 
                function downloadSVG() {
                     alert("When the save dialog appears, you must manually add the .svg extension to the file name.");
@@ -352,9 +453,51 @@
                     downloader.dispatchEvent(event);
                };
 
-               function sampleHSLColorValue(){
+               function sampleHSLColorValue(evt) {
                     console.log("eyedropper triggered");
+                    let id = evt.target.id;
+                    console.log("id: " + id);
+                    let pixel = document.getElementById(id);
+                    let targetColor = pixel.getAttribute("style");
+                    console.log("targetColor: " + targetColor);
+                    let hueSample = targetColor.substring(9, targetColor.indexOf(","));
+                    if(hueSample == "0"){
+                         hueSample = 0;} else {
+                              hueSample = parseInt(hueSample);
+                         }
+                    console.log("hueSample: " + hueSample);
+                    let satSample = targetColor.substring(targetColor.indexOf(",") + 1, targetColor.lastIndexOf(",") - 1);
+                    if(satSample == "0"){
+                         satSample = 0;} else {
+                              satSample = parseInt(satSample);
+                         }
+                    console.log("satSample: " + satSample);
+                    let lightnessSample = targetColor.substring(targetColor.lastIndexOf(",") + 1, targetColor.lastIndexOf("%"));
+                    if(lightnessSample == "0"){
+                         lightnessSample = 0;} else {
+                              lightnessSample = parseInt(lightnessSample);
+                         }
+                    console.log("lightnessSample: " + lightnessSample);
+                    console.log("color:" + `hsl(${hueSample},${satSample}%,${lightnessSample}%)`);
+
+                    let arr = getClientY(hueSample, satSample, lightnessSample);
+
+                    updateHueValue({clientY: arr[0]});
+                    updateSatValue({clientY: arr[1]});
+                    updateLightnessValue({clientY: arr[2]});
                };
+
+               function getClientY(hueSample, satSample, lightnessSample){
+                    const yOffset = 0;
+                    const totalHeight = 270;
+                    let clientYArr = [];
+                    clientYArr[0] = (400 - totalHeight * hueSample / 360) - yOffset;
+                    clientYArr[1] = (400 - totalHeight * satSample / 100) - yOffset;
+                    clientYArr[2] = (400 - totalHeight * lightnessSample / 100) - yOffset;
+                    console.log(clientYArr);
+                    return clientYArr;
+               }
+
 
                function cursorGrabbing(evt){
                     console.log("cursorGrabbing triggered");
@@ -367,6 +510,102 @@
                     let slider = evt.target;
                     slider.setAttribute("cursor", "grab;");
                };
+
+               function undo(){
+                    console.log("undo triggered");
+                    if(undoStack.length > 0){
+                         let lastAction = undoStack.pop();
+                         let id = lastAction.id;
+                         let color = lastAction.color;
+                         let pixel = document.getElementById(id);
+                         let currentColor = pixel.getAttribute("style");
+                         pixel.setAttribute("style", color);
+                         if(redoStack.length < 20){
+                              redoStack.push({id: id, color: currentColor});
+                         } else {
+                              redoStack.shift();
+                              redoStack.push({id: id, color: currentColor});
+                         }
+                    }
+               };
+
+               function redo(){
+                    console.log("redo triggered");
+                    if(redoStack.length > 0){
+                         let lastAction = redoStack.pop();
+                         let id = lastAction.id;
+                         let color = lastAction.color;
+                         let pixel = document.getElementById(id);
+                         let currentColor = pixel.getAttribute("style");
+                         pixel.setAttribute("style", color);
+                         if(undoStack.length < 20){
+                              undoStack.push({id: id, color: currentColor});
+                         } else {
+                              undoStack.shift();
+                              undoStack.push({id: id, color: currentColor});
+                         }
+                    }
+               };
+
+               function logUndoStack(){
+                    console.log(undoStack);
+               };
+
+               function logRedoStack(){
+                    console.log(redoStack);
+               };
+
+               function toggleFillBucket(){
+                    console.log("toggleFillBucket triggered");
+                    isEyeDropperSelected = false;
+                    isRainbowBrushSelected = false;
+                    isFillBucketSelected = true;
+                    svg.setAttribute("cursor", "default");
+               };
+
+              function getRectangle(row, col) {
+                    return document.getElementById(`r${row}c${col}`);
+               };
+
+               function isValid(row, col, rows, cols) {
+                    return row >= 0 && row < rows && col >= 0 && col < cols;
+               };
+
+               function floodFill(row, col, targetColor, replacementColor, visited) {
+                    if (!isValid(row, col, 50, 50) || visited.has(`r${row}c${col}`)) {
+                         return;
+                    }
+
+                    const rect = getRectangle(row, col);
+                    const currentColor = rect.style.fill;
+
+                    if (currentColor !== targetColor) {
+                         return;
+                    }
+
+                    rect.style.fill = replacementColor;
+                    visited.add(`r${row}c${col}`);
+
+                    floodFill(row - 1, col, targetColor, replacementColor, visited);
+                    floodFill(row + 1, col, targetColor, replacementColor, visited);
+                    floodFill(row, col - 1, targetColor, replacementColor, visited);
+                    floodFill(row, col + 1, targetColor, replacementColor, visited);
+               };
+
+
+               function paintbucket(row, col, newColor) {
+                    const targetRect = getRectangle(row, col);
+                    const targetColor = targetRect.style.fill;
+                    const visited = new Set();
+
+                    if (newColor === targetColor) {
+                         return;
+                    }
+
+                    floodFill(row, col, targetColor, newColor, visited);
+               };
+
+
 
                function commitToChain(){
                     console.log("commitToChain triggered");
