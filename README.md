@@ -1,18 +1,9 @@
-# Web-Drawing-Interface-Test
+# Vector-Drawing-NFT
 
-This is a simple drawing interface using the canvas and inline Javascript within an HTML document to experiment with and test the following:
+This project is heavily influenced by the javascript driven canvas app I made with the aid of OpenAI's scripting model. You will be able to see many similarities in the layout, though with improvements.
 
-1. OpenAi's GPT-3 Codex model capabilities around frontend/UI creation
-2. Practice and reinforce recent Javascript studies
-3. Test potential frontend mechanics for future NFT executions
+As the SVG file format is web native and resolution independent, I wanted to try building a new illustration app that allows users to create vector illustrations as opposed to raster drawings. To make things simpler, I opted for a pixel art style which utilizes filled squares as opposed to paths, although I do intend to continue experimenting with future iterations capable of drawing true paths as well.
 
-In the script comments, you can get an approximate sense of the prompt I provided to Codex as it inserts comments on its own for each instruction step asked of it.  I say approximate since in reality, this is the AI model's own interpretation of my prompt instructions, regurgitated and trimmed at times.  Unfortunately, I thought I had saved the initial prompt copy somewhere for reference, but I haven't been able to locate it.  If I do, I will provide it for anyone who is interested.
+My other goal was to make the entire app self-contained with as few (if any) dependencies as possible. To this end, all of the drawing functionality is included as in-line Javascript within the SVG element itself.
 
-After testing the initial mechanics of the code, I started to add small bug fixes, feature additions, and improvements without the aid of the AI model. These changes included the clear button allowing users to reset the canvas and draw a new image as well as visibility logic applied to the data URL so that its container appears only when the save button has been pressed while disappearing again if the user clears the canvas.  Implemented various other *very* simple design/styling adjustments.
-
-As this is just a capabilities test, the whole thing is still very understandably rough, unoptimized, and unrefined.  I plan to continue noodling on the interface as my schedule allows to evolve it, piecemeal, into a more sophisticated and polished product.  Will most likely refactor the javascript to utilize SVG XML to produce the user's GFX output as vectors rather than the rasterized Canvas.
-
-The script includes a function to "save" the image as a base64 data URL.  In the future, this output can be passed as a function argument for an NFT contract's mint function.
-
-
-EDIT:  Having experimented with enabling drawing capabilities via the Canvas, I have begun the process of experimenting with creating similar functionality strictly using SVG XML and in-line javascript in order to facilitate vector-based drawing rather than raster illustration.
+Finally, the end goal for the app is to serve as an intermediate image URI for a pixel art NFT collection. Users who mint an NFT from the collection will initially see the drawing app as the media for their token ID, allowing them to draw their own art inside of the app's canvas. Then by pressing the lock art button on the interface, they will be able to lock in their art and replace the image URI in the smart contract with the base64 Data URI for their own vector art.
